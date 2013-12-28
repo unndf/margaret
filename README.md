@@ -1,0 +1,4 @@
+margaret
+========
+
+*Coin trading bot
