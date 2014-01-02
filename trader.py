@@ -1,16 +1,20 @@
 import sys
+import os
 sys.path.append('./misc')
 
+import threading
 from time import time
 from time import sleep
+from time import strftime
 from exchanges.btce import Btce
 from methods.donchianchannels import Breakout
 from methods.smacrossover import SMAcrossover
 from methods.emacrossover import EMAcrossover
+from methods.trailingstop import Trailingstop
+from exchanges.btcchina import Btcchina
 
-#SOON......
-#from exchanges.btcchina import Btcchina
 #from exchanges.cryptsy import Cryptsy
+#SOON......
 
 
 VALID_PAIRS= \
@@ -34,7 +38,8 @@ VALID_PAIRS= \
         "xpm_btc"]
 
 EXCHANGES = {\
-'btce':Btce\
+'btce':Btce,\
+'btcchina':Btcchina\
 }
 INDICATORS = {\
 'sma_crossover': SMAcrossover,\
@@ -43,24 +48,28 @@ INDICATORS = {\
 }
 
 class Trader(object):
-    def __init__(self,exchange,public_key,private_key,pair,amount,\
+    def __init__(self,name,exchange,public_key,private_key,pair,amount,\
                  datumsize=1000,\
                  period_length=60,\
                  charting='candlestick',\
-                 inital_wait=5,\
-                 update_interval=5):
-
+                 initial_wait=5,\
+                 update_interval=5,\
+                 stoploss=7):
+        
+        self.name = name
         self.exchange = EXCHANGES[exchange](public_key,private_key)
         self.amount = amount
         self.pair = pair
         self.period_length = period_length
         self.charting = charting
-        self.inital_wait = inital_wait
+        self.initial_wait = initial_wait
         self.update_interval = update_interval
         self.indicators = {}
         self.datum = [{'open':0,'close':0,'high':0,'low':0}] * datumsize
+        self.trade_history = [{'buy':0,'sell':0,'profit':0}] * datumsize
         self.stop = True
-    
+        self.stoploss_percentage = stoploss
+
     def config_sma(self,shortsma=7,longsma=30):
         self.sma = SMAcrossover(self.datum,shortsma=shortsma,longsma=longsma)
         self.indicators['sma_crossover'] = self.sma
@@ -78,20 +87,33 @@ class Trader(object):
 
     def run(self):
         self.stop = False
+        active_trade = False
+        profits = 0
+        stoploss = Trailingstop(self.datum[0]['close'],self.stoploss_percentage)
+
         while not self.stop:
             signal = self.indicator.get_signal()
-            if signal == 'buy':
+            if signal == 'buy' and not active_trade:
                 #buy
-                #self.exchange.buy()
-                print('BUY')
-            elif signal == 'sell':
+                self.buy()
+                stoploss = Trailingstop(self.datum[0]['close'],self.stoploss_percentage)
+                active_trade = True
+
+            elif signal == 'sell' and active_trade:
                 #sell
-                #self.exchange.sell()
-                print('SELL')
-            elif signal == 'wait':
-                #wait
-                print('WAIT')
-                
+                self.sell()
+                active_trade = False
+
+            elif signal == 'wait' and active_trade:
+                if self.datum[0]['close'] <= stoploss.stop:
+                    print('[' + self.name + ']: recieved signal to sell')
+                    self.append_log("Sell signal recieved\n"+"\tSelling "+str(self.amount))
+                    active_trade = False
+                else:
+                    print('[' + self.name + ']: is waiting. Last:'+str(self.datum[0]))
+            elif signal =='wait':
+                print('[' + self.name + ']: is waiting. Last:'+str(self.datum[0]))
+            
             start = time()
             prices = []
             while(time() < (start + self.period_length)):
@@ -101,7 +123,8 @@ class Trader(object):
             
             self.chart(prices)
             self.indicator.update(self.datum)
-            
+            stoploss.update(self.datum[0]['close'])
+    
     def prep_period(self):
         for i in range(self.initial_wait):
             start = time()
@@ -126,17 +149,43 @@ class Trader(object):
 
         self.datum.pop()
         self.datum.insert(0,{'high':mhigh,'low':mlow,'open':mopen,'close':mclose})
-#        bid = 0 
-#        for sale in sales:
-#            if sale['price'] < bid or bid == 0:
-#                bid  = sale['price']
 
-#        return bid
+    def append_log(self,message):
+        cwd = os.path.dirname(__file__)
+        log = open(cwd+ "/logs/" + self.name+'.log', 'a')
+        log.write(strftime("%B %d @ %H:%M > ")+ message +'\n')
 
-#    def optimal_bid(self):
-#        sell = 0 
-#        for bid in bids:
-#            if bid['price'] > sell or sell == 0:
-#                sell = bid['price']
+    def optimal_bid(self):
+        sales = self.exchange.get_sales(self.pair)
+        for sale in sales:
+            if sale['amount'] < self.amount:
+                sale.pop()
 
-#        return sell
+        sales= [x['price'] for x in sales]
+        return min(sales)
+
+    def optimal_sell(self):
+        bids = self.exchange.get_bids(self.pair)
+        for bid in bidss:
+            if bid['amount'] < self.amount:
+                sale.pop()
+        bids = [x['price'] for x in bids]
+        return max(sales)
+    
+    def sell(self):
+        price = self.optimal_sell()
+        print(price)
+        print('[' + self.name + ']: recieved signal to sell')
+        self.append_log("Sell signal recieved\n"+"Selling "+str(self.amount))
+        self.trade_history[0]['sell'] = price
+        self.trade_history[0]['profit'] = price - self.trade_history[0]['buy']
+        print("profits: ", self.trade_history[0]['profit'])
+    
+    def buy(self): 
+        price = self.optimal_bid()
+        print(price)
+        print('[' + self.name + ']: recieved signal to buy')
+        self.append_log("Buy signal recieved\n"+"Buying "+str(self.amount))
+        self.trade_history.pop()
+        self.trade_history.insert(0,{'buy':0.0,'sell':0.0,'profit':0.0})
+        self.trade_history[0]['buy'] = price 
