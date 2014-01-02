@@ -157,35 +157,46 @@ class Trader(object):
 
     def optimal_bid(self):
         sales = self.exchange.get_sales(self.pair)
+        s = []
         for sale in sales:
-            if sale['amount'] < self.amount:
-                sale.pop()
-
-        sales= [x['price'] for x in sales]
+            if sale['amount'] >= self.amount:
+                s.append(sale)
+        
+        sales= [x['price'] for x in s]
         return min(sales)
 
     def optimal_sell(self):
         bids = self.exchange.get_bids(self.pair)
-        for bid in bidss:
-            if bid['amount'] < self.amount:
-                sale.pop()
-        bids = [x['price'] for x in bids]
-        return max(sales)
+        b = []
+        for bid in bids:
+            if bid['amount'] >= self.amount:
+                b.append(bid)
+
+        bids = [x['price'] for x in b]
+        return max(bids)
     
     def sell(self):
         price = self.optimal_sell()
-        print(price)
-        print('[' + self.name + ']: recieved signal to sell')
-        self.append_log("Sell signal recieved\n"+"Selling "+str(self.amount))
+
         self.trade_history[0]['sell'] = price
-        self.trade_history[0]['profit'] = price - self.trade_history[0]['buy']
+        self.trade_history[0]['profit'] = (price - self.trade_history[0]['buy']) * self.amount
+        
+        print('[' + self.name + ']: recieved signal to sell')
         print("profits: ", self.trade_history[0]['profit'])
+        
+        self.append_log("Sell signal recieved\n" +\
+                        "Selling :"+str(self.amount) + str(self.pair[:3]) +\
+                        ' @ ' + str(price) + str(self.pair[4:]) + '\n' +\
+                        "Profit :" + str(self.trade_history[0]['profit']) + '\n' +\
+                        "Cumulative Profit: " + str(sum([x['profit'] for x in self.trade_history])) + str(self.pair[4:]) ) 
+
     
     def buy(self): 
         price = self.optimal_bid()
-        print(price)
         print('[' + self.name + ']: recieved signal to buy')
-        self.append_log("Buy signal recieved\n"+"Buying "+str(self.amount))
+        self.append_log("Buy signal recieved\n"+"Buying :"+str(self.amount) + str(self.pair[:3]) +\
+                        ' @ ' + str(price) + str(self.pair[4:]) )
+        
         self.trade_history.pop()
         self.trade_history.insert(0,{'buy':0.0,'sell':0.0,'profit':0.0})
         self.trade_history[0]['buy'] = price 

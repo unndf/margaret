@@ -11,15 +11,16 @@ def load_config():
     sections = config.sections()
     for name in sections:
 
-        indicator     =  config.get(name,'indicator')
-        public_key    =  config.get(name,'public key')
-        private_key   =  config.get(name,'private key')
-        exchange      =  config.get(name,'exchange')
-        pair          =  config.get(name,'pair')
-        amount        =  config.get(name,'amount')
-        charting      =  'candlestick'
-        initial_wait  =  5
-        period_length =  60
+        indicator       =  config.get(name,'indicator')
+        public_key      =  config.get(name,'public key')
+        private_key     =  config.get(name,'private key')
+        exchange        =  config.get(name,'exchange')
+        pair            =  config.get(name,'pair')
+        amount          =  config.getfloat(name,'amount')
+        charting        =  'candlestick'
+        initial_wait    =  5
+        period_length   =  60
+        update_interval =  5
 
         #configure optional arguments in the config
         if config.has_option(name,'charting'):
@@ -27,7 +28,9 @@ def load_config():
         if config.has_option(name,'initial_wait'):
             initial_wait = config.getint(name,'initial_wait')
         if config.has_option(name,'period_length'):
-            period_length = getint(name,'period_length')
+            period_length = config.getint(name,'period_length')
+        if config.has_option(name,'update_interval'):
+            update_interval = config.getint(name,'update_interval')
 
         trader = Trader(name,\
                         exchange,\
@@ -37,7 +40,9 @@ def load_config():
                         amount,\
                         charting=charting,\
                         initial_wait=initial_wait,\
-                        period_length=period_length)
+                        period_length=period_length,\
+                        update_interval=update_interval\
+                        )
 
         traders.append(trader)
 
@@ -78,10 +83,14 @@ def load_config():
 
     return traders
 
+def start(trader):
+    trader.prep_period()
+    trader.run()
+
 if __name__ == '__main__':
     traders = load_config()
     for trader in traders:
-        _thread.start_new_thread(trader.run,())
+        _thread.start_new_thread(start,(trader,))
 
     while True:
             #run forever
