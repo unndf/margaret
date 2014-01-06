@@ -5,8 +5,6 @@ import hmac
 class Key(object):
     def __init__(self,public,private):
         
-#        self.BTC_api_key = "WC15ULAE-MD0AZZ12-V854PJAP-I9NFPFNQ-EG6LZJDE"
-#        self.BTC_api_secret_key = "a0b81c2b2fe5cf0b625160b515297ecd67127233adf47123a09958612060b598"
         self.BTC_api_key = public
         self.BTC_api_secret_key = private
         self.name = public
