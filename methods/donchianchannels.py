@@ -4,6 +4,7 @@ class Breakout(object):
         self.lower = 0
         self.parameter = parameter
         self.channels = []
+        self.last = 0
 
         #calculate the channels for the trading periods already given
         i = 0
@@ -42,14 +43,14 @@ class Breakout(object):
 
         self.channels.pop()
         self.channels.insert(0,{'upper':upper,'lower':lower})
-
-    def get_signal(self,last):
+        self.last = last_periods[0]['close']
+    def get_signal(self):
         
         #Bullish, buy
-        if last > self.channels[0]['upper']:
+        if self.last > self.channels[1]['upper']:
             return 'buy'
         #Bearish, sell
-        elif last < self.channels[0]['lower']:
+        elif self.last < self.channels[1]['lower']:
             return 'sell'
         else:
             return 'wait'

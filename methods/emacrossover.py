@@ -4,7 +4,6 @@ class EMAcrossover(object):
         self.longema  = longema
         self.coefficient = 1-coefficient
         self.ema = []
-
         #calculate the ema for the trading periods already given
         i = 0
         while i < (len(trading_periods)) - longema:
@@ -46,6 +45,7 @@ class EMAcrossover(object):
 
         self.ema.pop()
         self.ema.insert(0,{'shortema':sema,'longema':lema})
+    
 
     def get_signal(self):
         current_sema = self.ema[0]['shortema']

@@ -1,7 +1,3 @@
-import sys
-import os
-sys.path.append('./misc')
-
 import threading
 from time import time
 from time import sleep
@@ -106,8 +102,7 @@ class Trader(object):
 
             elif signal == 'wait' and active_trade:
                 if self.datum[0]['close'] <= stoploss.stop:
-                    print('[' + self.name + ']: recieved signal to sell')
-                    self.append_log("Sell signal recieved\n"+"\tSelling "+str(self.amount))
+                    self.sell()
                     active_trade = False
                 else:
                     print('[' + self.name + ']: is waiting. Last:'+str(self.datum[0]))
@@ -155,28 +150,9 @@ class Trader(object):
         log = open(cwd+ "/logs/" + self.name+'.log', 'a')
         log.write(strftime("%B %d @ %H:%M > ")+ message +'\n')
 
-    def optimal_bid(self):
-        sales = self.exchange.get_sales(self.pair)
-        s = []
-        for sale in sales:
-            if sale['amount'] >= self.amount:
-                s.append(sale)
-        
-        sales= [x['price'] for x in s]
-        return min(sales)
-
-    def optimal_sell(self):
-        bids = self.exchange.get_bids(self.pair)
-        b = []
-        for bid in bids:
-            if bid['amount'] >= self.amount:
-                b.append(bid)
-
-        bids = [x['price'] for x in b]
-        return max(bids)
-    
     def sell(self):
-        price = self.optimal_sell()
+        price = self.exchange.get_sell(self.pair)
+        self.exchange.sell(self.pair,self.amount,price)
 
         self.trade_history[0]['sell'] = price
         self.trade_history[0]['profit'] = (price - self.trade_history[0]['buy']) * self.amount
@@ -192,7 +168,9 @@ class Trader(object):
 
     
     def buy(self): 
-        price = self.optimal_bid()
+        price = self.exchange.get_buy(self.pair)
+        self.exchange.buy(self.pair,self.amount,price)
+
         print('[' + self.name + ']: recieved signal to buy')
         self.append_log("Buy signal recieved\n"+"Buying :"+str(self.amount) + str(self.pair[:3]) +\
                         ' @ ' + str(price) + str(self.pair[4:]) )

@@ -71,3 +71,82 @@ class Btcchina(object):
 
         st = str(resp.read().decode('utf-8'))
         return float((json.loads(st))['ticker']['last'])
+
+    def get_sell(self,pair):
+        status_code = 0
+        backoff = Backoff()
+        self.dataconn.connect()
+        while status_code != 200:
+            
+            self.dataconn.request("GET", "/data/ticker")
+            
+            try:
+                resp = self.dataconn.getresponse()
+                status_code = resp.status
+            except BadStatusLine:
+                status_code = 0
+
+            backoff.sleep()
+
+        st = str(resp.read().decode('utf-8'))
+        return float((json.loads(st))['ticker']['sell'])
+
+    def get_buy(self,pair):
+        status_code = 0
+        backoff = Backoff()
+        self.dataconn.connect()
+        while status_code != 200:
+            
+            self.dataconn.request("GET", "/data/ticker")
+            
+            try:
+                resp = self.dataconn.getresponse()
+                status_code = resp.status
+            except BadStatusLine:
+                status_code = 0
+
+            backoff.sleep()
+
+        st = str(resp.read().decode('utf-8'))
+        return float((json.loads(st))['ticker']['buy'])
+       
+    def get_sales(self,pair):
+        status_code = 0
+        backoff = Backoff()
+        self.dataconn.connect()
+        while status_code != 200:
+            
+            self.dataconn.request("GET", "/data/orderbook")
+            
+            try:
+                resp = self.dataconn.getresponse()
+                status_code = resp.status
+            except BadStatusLine:
+                status_code = 0
+
+            backoff.sleep()
+
+        st = str(resp.read().decode('utf-8'))
+        sales = json.loads(st)['asks']
+        
+        return [{'price':x[0],'amount':x[1]} for x in sales]
+
+    def get_bids(self,pair):
+        status_code = 0
+        backoff = Backoff()
+        self.dataconn.connect()
+        while status_code != 200:
+            
+            self.dataconn.request("GET", "/data/orderbook")
+            
+            try:
+                resp = self.dataconn.getresponse()
+                status_code = resp.status
+            except BadStatusLine:
+                status_code = 0
+
+            backoff.sleep()
+
+        st = str(resp.read().decode('utf-8'))
+        bids = json.loads(st)['bids']
+        return [{'price':x[0],'amount':x[1]} for x in bids]

@@ -1,9 +1,9 @@
 class Trailingstop(object):
-    def __init__(self,percentage):
-        self.percentage = 0.01 * percentage
-        self.stoploss = 0
+    def __init__(self,initial_price,percentage):
+        self.step = 0.01 * percentage
+        self.stop = initial_price - self.step
 
-    def update(last):
-        stop = last - (last*self.percentage)
-        if stop >= self.stoploss:
-            self.stoploss = stop
+    def update(self,last):
+        stop = last - (self.step)
+        if stop >= self.stop:
+            self.stop = stop
