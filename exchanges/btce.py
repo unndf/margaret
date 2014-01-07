@@ -19,12 +19,12 @@ class Btce(object):
             try:
                 conn.request("POST","/tapi",params,header)
                 response = conn.getresponse()
-                self.status = response.status
+                status_code = response.status
             except Exception as e:
                 #Do error handling
                 print("Error occured during HTTP request. ", e.value)
         
-        st = str(resp.read().decode('utf-8'))
+        st = str(response.read().decode('utf-8'))
         return json.loads(st)
 
     def _public_request(self,method):
@@ -34,12 +34,12 @@ class Btce(object):
             try:
                 conn.request("GET","/api/2/"+method)
                 response = conn.getresponse()
-                self.status = response.status
+                status_code = response.status
             except Exception as e:
                 #Do error handling
                 print("Error occured during HTTP request. ", e.value)
         
-        st = str(resp.read().decode('utf-8'))
+        st = str(response.read().decode('utf-8'))
         return json.loads(st)
 
     def getinfo(self):
@@ -104,7 +104,7 @@ class Btce(object):
         return [ {'amount':x['amount'],'price':x['price']} for x in sales ]
 
     def get_last(self,pair):
-        return self.ticker(pair)['last']
+        return self.get_ticker(pair)['last']
 
     def get_buy(self,pair):
         return self.get_ticker['buy']
