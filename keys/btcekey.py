@@ -23,12 +23,15 @@ class Key(object):
             self.nonce = int(save_file.readline())
             save_file.close()
         except IOError:
-            self.nonce = 0
+            #file doesn't exist
+            #start nonce from 13
+            self.nonce = 13
             save_file = open(self.name + '-nonce.txt','w')
             save_file.write(str(self.nonce))
             save_file.close()
         except ValueError:
-            self.nonce = 0
+            print("The nonce file '",self.name,"-nonce.txt' does not contain a valid integer")
+            raise
 
     def save_nonce(self):
         save_file = open(self.name +'-nonce.txt' ,'w')
