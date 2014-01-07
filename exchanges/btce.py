@@ -1,7 +1,3 @@
-import sys
-sys.path.append('..')
-sys.path.append('../misc')
-
 from keys.btcekey import Key
 from misc.backoff import Backoff
 from urllib.parse import urlencode
@@ -13,7 +9,7 @@ import json
 
 class Btce(object):
     def __init__(self,public_key,private_key):
-        self.conn = http.client.HTTPSConnection("btc-e.com",strict=False)
+        self.conn = http.client.HTTPSConnection("btc-e.com")
         self.key = Key(public_key,private_key)
 
     def _private_request(self,params,header):
@@ -22,6 +18,21 @@ class Btce(object):
         while status_code != 200:
             try:
                 conn.request("POST","/tapi",params,header)
+                response = conn.getresponse()
+                self.status = response.status
+            except Exception as e:
+                #Do error handling
+                print("Error occured during HTTP request. ", e.value)
+        
+        st = str(resp.read().decode('utf-8'))
+        return json.loads(st)
+
+    def _public_request(self,method):
+        status_code = 0
+        conn = http.client.HTTPSConnection("btc-e.com")
+        while status_code != 200:
+            try:
+                conn.request("GET","/api/2/"+method)
                 response = conn.getresponse()
                 self.status = response.status
             except Exception as e:
@@ -71,65 +82,29 @@ class Btce(object):
         return self._private_request(params,header)
     
     def get_bids(self,pair):
-        status_code = 0
-        backoff = Backoff()
-        self.conn.connect()
-        while status_code != 200:
-
-            self.conn.request("GET", "/api/2/"+ pair + "/trades")
-            resp = self.conn.getresponse()
-            status_code = resp.status
-            backoff.sleep()
-
-        st = str(resp.read().decode('utf-8'))
-        raw = json.loads(st)
+        method = pair+"/trades"
+        trades = self._public_request(method)
         bids = []
 
-        for trade in raw:
+        for trade in trades:
             if trade['trade_type'] == 'bid':
                 bids.append(trade)
         
         return [ {'amount':x['amount'],'price':x['price']} for x in bids ]
 
     def get_sales(self,pair):
-        status_code = 0
-        backoff = Backoff()
-        self.conn.connect()
-        while status_code != 200:
-
-            self.conn.request("GET", "/api/2/"+ pair + "/trades")
-            resp = self.conn.getresponse()
-            status_code = resp.status
-            backoff.sleep()
-
-        st = str(resp.read().decode('utf-8'))
-        raw = json.loads(st)
+        method = pair+"/trades"
+        trades = self._public_request(method)
         sales = []
 
-        for trade in raw:
+        for trade in trades:
             if trade['trade_type'] == 'ask':
                 sales.append(trade)
             
         return [ {'amount':x['amount'],'price':x['price']} for x in sales ]
 
     def get_last(self,pair):
-        status_code = 0
-        backoff = Backoff()
-        self.conn.connect()
-        while status_code != 200:
-            
-            self.conn.request("GET", "/api/2/" + pair + "/ticker")
-            
-            try:
-                resp = self.conn.getresponse()
-                status_code = resp.status
-            except BadStatusLine:
-                status_code = 0
-
-            backoff.sleep()
-
-        st = str(resp.read().decode('utf-8'))
-        return (json.loads(st))['ticker']['last']
+        return self.ticker(pair)['last']
 
     def get_buy(self,pair):
         return self.get_ticker['buy']
@@ -138,21 +113,6 @@ class Btce(object):
         return self.get_ticker(pair)['sell']
 
     def get_ticker(self,pair):
-        status_code = 0
-        backoff = Backoff()
-        #self.conn.connect()
-        self.conn = http.client.HTTPSConnection("btc-e.com",strict=False)
-        while status_code != 200:
-            
-            self.conn.request("GET", "/api/2/" + pair + "/ticker")
-            
-            try:
-                resp = self.conn.getresponse()
-                status_code = resp.status
-            except BadStatusLine:
-                status_code = 0
-
-            backoff.sleep()
-
-        st = str(resp.read().decode('utf-8'))
-        return (json.loads(st))['ticker']
+        method = pair+"/ticker"
+        ticker = self._public_request(method)
+        return ticker['ticker']
