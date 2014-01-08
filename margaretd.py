@@ -9,7 +9,7 @@ def start(trader):
 if __name__ == '__main__':
     traders = load_config()
     for trader in traders:
-        _thread.start_new_thread(start,(trader,))
+        trader.start()
 
     while True:
             #run forever

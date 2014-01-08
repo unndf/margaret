@@ -1,4 +1,4 @@
-import threading
+from threading import Thread
 from time import time
 from time import sleep
 from time import strftime
@@ -43,7 +43,7 @@ INDICATORS = {\
 'donchain_breakout': Breakout,\
 }
 
-class Trader(object):
+class Trader(Thread):
     def __init__(self,name,exchange,public_key,private_key,pair,amount,\
                  datumsize=1000,\
                  period_length=60,\
@@ -52,6 +52,7 @@ class Trader(object):
                  update_interval=5,\
                  stoploss=7):
         
+        Thread.__init__(self)
         self.name = name
         self.exchange = EXCHANGES[exchange](public_key,private_key)
         self.amount = amount
