@@ -5,6 +5,7 @@ from http.client import BadStatusLine
 
 import json
 import http.client
+import urllib.request
 import json
 
 class Btce(object):
@@ -14,32 +15,31 @@ class Btce(object):
 
     def _private_request(self,params,header):
         status_code = 0
-        conn = http.client.HTTPSConnection("btc-e.com")
         while status_code != 200:
+            conn = http.client.HTTPSConnection("btc-e.com")
             try:
                 conn.request("POST","/tapi",params,header)
                 response = conn.getresponse()
                 status_code = response.status
-            except Exception as e:
+            except Exception:
                 #Do error handling
-                print("Error occured during HTTP request. ", e.value)
+                conn = http.client.HTTPSConnection("btc-e.com")
+                print("Error occured during HTTP request")
         
         st = str(response.read().decode('utf-8'))
         return json.loads(st)
 
     def _public_request(self,method):
         status_code = 0
-        conn = http.client.HTTPSConnection("btc-e.com")
         while status_code != 200:
             try:
-                conn.request("GET","/api/2/"+method)
-                response = conn.getresponse()
-                status_code = response.status
-            except Exception as e:
+                req = urllib.request.urlopen("https://btc-e.com/api/2/"+method)
+                status_code = req.getcode()
+            except Exception:
                 #Do error handling
-                print("Error occured during HTTP request. ", e.value)
-        
-        st = str(response.read().decode('utf-8'))
+                print("Error occured during HTTP request")
+                  
+        st = str(req.read().decode('utf-8'))
         return json.loads(st)
 
     def getinfo(self):
@@ -107,7 +107,7 @@ class Btce(object):
         return self.get_ticker(pair)['last']
 
     def get_buy(self,pair):
-        return self.get_ticker['buy']
+        return self.get_ticker(pair)['buy']
 
     def get_sell(self,pair):
         return self.get_ticker(pair)['sell']

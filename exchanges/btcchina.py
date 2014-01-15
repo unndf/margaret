@@ -20,13 +20,13 @@ class Btcchina(object):
 
     def _public_request(self,method):
         status_code = 0
-        conn = http.client.HTTPSConnection("data.btcchina.com")
         while status_code != 200:
+            conn = http.client.HTTPSConnection("data.btcchina.com")
             conn.request("GET", method)
             try:
                 resp = conn.getresponse()
                 status_code = resp.status
-            except Exception as e:
+            except Exception:
                 print("Error")
 
         st = str(resp.read().decode('utf-8'))
@@ -34,8 +34,8 @@ class Btcchina(object):
 
     def _private_request(self,method,params):
         status_code = 0
-        conn = http.client.HTTPSConnection("api.btcchina.com")
         while status_code != 200:
+            conn = http.client.HTTPSConnection("api.btcchina.com")
             tonce = self.key.get_tonce()
             params = {"method":method,\
                       "tonce": tonce,\
@@ -51,7 +51,7 @@ class Btcchina(object):
                 conn.request("POST", "/api_trade_v1.php" , json.dumps(params), header)
                 resp = conn.getresponse()
                 status_code = resp.status
-            except Exception as e:
+            except Exception:
                 print("Error occured")
         
         st = str(resp.read().decode('utf-8'))

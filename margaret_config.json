@@ -1,0 +1,84 @@
+{
+    "EMA-example" : 
+    {
+        "indicator_config": 
+        {
+            "emacrossover":
+            {
+                "short": 7,
+                "long": 30,
+                "coefficient": 0.18
+            }
+
+        },
+        "pair" : "btc_usd",
+        "exchange" : "btce",
+        "amount" : 10,
+        "indicator" : ["emacrossover"],
+        "period_length" : 60,
+        "private_key" : "private_key_here",
+        "public_key" : "public_key_here"
+    },
+
+    "SMA-example" : 
+    {
+        "indicator_config": 
+        {
+            "smacrossover":
+            {
+                "short": 7,
+                "long": 30
+            }
+
+        },
+        "pair" : "btc_usd",
+        "exchange" : "btce",
+        "amount" : 10,
+        "indicator" : ["smacrossover"],
+        "period_length" : 60,
+        "private_key" : "private_key_here",
+        "public_key" : "public_key_here"
+    },
+
+    "Donchian-example" : 
+    {
+        "indicator_config": 
+        {
+            "donchianchannels":
+            {
+                "parameter":10
+            }
+
+        },
+        "pair" : "btc_usd",
+        "exchange" : "btce",
+        "amount" : 10,
+        "indicator" : ["donchianchannels"],
+        "period_length" : 60,
+        "private_key" : "private_key_here",
+        "public_key" : "public_key_here"
+    },
+
+    "SMA+Donchian-example" : 
+    {
+        "indicator_config": 
+        {
+            "donchianchannels":
+            {
+                "parameter":10
+            },
+            "smacrossover":
+            {
+                "short": 7,
+                "long": 30
+            }
+        },
+        "pair" : "btc_usd",
+        "exchange" : "btce",
+        "amount" : 10,
+        "indicator" : ["smacrossover","donchianchannels"],
+        "period_length" : 60,
+        "private_key" : "private_key_here",
+        "public_key" : "public_key_here"
+    }
+}

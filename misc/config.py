@@ -19,6 +19,7 @@ def load_config():
         initial_wait    =  5
         period_length   =  60
         update_interval =  5
+        secondary_indicator = None
 
         #configure optional arguments in the config
         if config.has_option(name,'charting'):
@@ -29,6 +30,8 @@ def load_config():
             period_length = config.getint(name,'period_length')
         if config.has_option(name,'update_interval'):
             update_interval = config.getint(name,'update_interval')
+        if config.has_option(name,'secondary_indicator'):
+            secondary_indicator = config.get(name,'secondary_indicator')
 
         trader = Trader(name,\
                         exchange,\
@@ -71,8 +74,6 @@ def load_config():
             else:
                 trader.config_donchian_channels()
 
-            trader.config_donchian_channels()
-        
             trader.set_indicator('donchian_breakout')
         
         else:
