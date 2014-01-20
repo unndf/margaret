@@ -11,6 +11,7 @@ from methods.dualindicator import Dualindicator
 from exchanges.btcchina import Btcchina
 import http.client
 import os
+
 #from exchanges.cryptsy import Cryptsy
 #SOON......
 
@@ -191,10 +192,25 @@ class Trader(Process):
             symbol = "btcnCNY"
         
         print('['+str(self.name)+'] is getting historical data from http://bitcoincharts.com/')
-        conn = http.client.HTTPConnection("api.bitcoincharts.com")
-        conn.request("GET","/v1/trades.csv?symbol=" + symbol)
-        response = conn.getresponse()
-        st = response.read().decode('utf-8')
+        try:
+            getnew = (os.path.getmtime(symbol+'.txt')) < (time() - 900)
+        except:
+            getnew = True
+       
+        print(str(getnew))
+        if getnew:
+            conn = http.client.HTTPConnection("api.bitcoincharts.com")
+            conn.request("GET","/v1/trades.csv?symbol=" + symbol)
+            response = conn.getresponse()
+            st = response.read().decode('utf-8')
+            f = open(symbol+'.txt','w')
+            f.write(st)
+            f.close()
+        else:
+            f = open(symbol+'.txt','r')
+            st = f.read()
+            f.close()
+        
         periodsstr = st.split('\n')
         periods = []
         for period in periodsstr:
@@ -210,10 +226,10 @@ class Trader(Process):
         start = periods[0]['time']
         datum = []
         for period in periods:
-            if period['time'] > (start + self.period_length):
+            if period['time'] > (start - self.period_length):
                 if len(datum) > 0:
                     self.chart(datum)
-
+                    datum = []
                 start += self.period_length
             else:
                 datum.append(period['price'])
